@@ -5,8 +5,8 @@ import kotlin.io.path.readLines
 class AOCDay03(input: List<String>) {
 
     var schematic: Array<CharArray> = convertInputTo2DArray(input)
-    var gears: Array<CharArray> = Array(input.size){ CharArray(input[0].length) }
-    var gearNumbers: Array<IntArray> = Array(input.size){ IntArray(input[0].length) }
+    var coordinateMap = Array(this.schematic.size){Array(this.schematic[0].size){ mutableListOf(-1, -1) }}
+    var positionNumberMap: Map<List<Int>, MutableList<Int>> = mutableMapOf()
 
     fun convertInputTo2DArray(input: List<String>): Array<CharArray> {
         this.schematic = Array(input.size){ CharArray(input[0].length) }
@@ -16,193 +16,114 @@ class AOCDay03(input: List<String>) {
         return schematic
     }
 
-    fun checkForSymbols(row: Int, col: Int, regex: Regex, gearCount: Boolean, array: Array<CharArray>): Boolean {
-        var neighbors = ""
+    fun mapSymbolCoordinates() {
+        var rowEnd = this.schematic.size
+        var colEnd = this.schematic[0].size
+        for (i in 0..< rowEnd)
+            for (j in 0..< colEnd - 1) {
+                if (this.schematic[i][j].toString().contains("[^0-9.]".toRegex()))
+                    this.coordinateMap[i][j + 1] = mutableListOf(i, j)
+                if (this.schematic[i][j + 1].toString().contains("[^0-9.]".toRegex()))
+                    this.coordinateMap[i][j] = mutableListOf(i, j + 1)
+            }
 
-        fun corners() {
-            if (row == 0 && col == 0)
-                neighbors = array[row+1][col].toString() + array[row][col+1].toString() +
-                        array[row+1][col+1].toString()
-            else if (row == 0 && col == array[0].size - 1)
-                neighbors = array[row][col-1].toString() + array[row+1][col].toString() +
-                        array[row+1][col-1].toString()
-            else if (row == array.size - 1 && col == 0)
-                neighbors = array[row-1][col].toString() + array[row-1][col+1].toString() +
-                        array[row][col+1].toString()
-            else if (row == array.size - 1 && col == array[0].size - 1)
-                neighbors = array[row-1][col].toString() + array[row-1][col-1].toString() +
-                        array[row][col-1].toString()
-        }
+        for (i in 0..< rowEnd - 1)
+            for (j in 0..< colEnd - 1) {
+                if (this.schematic[i][j].toString().contains("[^0-9.]".toRegex()))
+                    this.coordinateMap[i + 1][j + 1] = mutableListOf(i, j)
+                if (this.schematic[i + 1][j + 1].toString().contains("[^0-9.]".toRegex()))
+                    this.coordinateMap[i][j] = mutableListOf(i + 1, j + 1)
+            }
 
-        fun firstOrLastRow() {
-            if (row == 0 && neighbors == "")
-                neighbors = array[row+1][col].toString() + array[row][col+1].toString() +
-                        array[row+1][col+1].toString() + array[row+1][col-1].toString() +
-                        array[row][col-1].toString()
-            else if (row == array.size - 1 && (col != 0 && col != array[0].size - 1))
-                neighbors = array[row-1][col].toString() + array[row][col-1].toString() +
-                        array[row][col+1].toString() + array[row-1][col+1].toString() +
-                        array[row-1][col-1].toString()
-        }
+        for (i in 1..< rowEnd)
+            for (j in 0..< colEnd - 1) {
+                if (this.schematic[i][j].toString().contains("[^0-9.]".toRegex()))
+                    this.coordinateMap[i - 1][j + 1] = mutableListOf(i, j)
+                if (this.schematic[i - 1][j + 1].toString().contains("[^0-9.]".toRegex()))
+                    this.coordinateMap[i][j] = mutableListOf(i - 1, j + 1)
+            }
 
-        fun firstOrLastColumn() {
-            if (col == 0 && neighbors == "")
-                neighbors = array[row-1][col].toString() + array[row+1][col].toString() +
-                        array[row][col+1].toString() + array[row-1][col+1].toString() +
-                        array[row+1][col+1].toString()
-            else if (col == array[0].size - 1 && (row != 0 && row != array.size - 1))
-                neighbors = array[row-1][col].toString() + array[row+1][col].toString() +
-                        array[row][col-1].toString() + array[row-1][col-1].toString() +
-                        array[row+1][col-1].toString()
-        }
-
-        corners()
-        firstOrLastRow()
-        firstOrLastColumn()
-
-        if (neighbors == "")
-            neighbors = array[row-1][col].toString() + array[row+1][col].toString() +
-                array[row][col-1].toString() + array[row][col+1].toString() +
-                array[row-1][col+1].toString() + array[row-1][col-1].toString() +
-                array[row+1][col+1].toString() + array[row+1][col-1].toString()
-
-        if (gearCount) {
-            return neighbors.replace("[^1]".toRegex(), "").length == 2
-        } else
-            return neighbors.contains(regex)
-    }
-
-    fun multiplyGears(row: Int, col: Int): BigInteger {
-        var product = BigInteger.ONE
-        var numbers: List<Int> = mutableListOf()
-
-        fun corners() {
-            if (row == 0 && col == 0)
-                numbers = mutableListOf(this.gearNumbers[row+1][col], this.gearNumbers[row][col+1], 
-                        this.gearNumbers[row+1][col+1])
-            else if (row == 0 && col == this.gearNumbers[0].size - 1)
-                numbers = mutableListOf(this.gearNumbers[row][col-1], this.gearNumbers[row+1][col],
-                        this.gearNumbers[row+1][col-1])
-            else if (row == this.gearNumbers.size - 1 && col == 0)
-                numbers = mutableListOf(this.gearNumbers[row-1][col], this.gearNumbers[row-1][col+1], 
-                        this.gearNumbers[row][col+1])
-            else if (row == this.gearNumbers.size - 1 && col == this.gearNumbers[0].size - 1)
-                numbers = mutableListOf(this.gearNumbers[row-1][col], this.gearNumbers[row-1][col-1],
-                        this.gearNumbers[row][col-1])
-        }
-
-        fun firstOrLastRow() {
-            if (row == 0 && numbers.isEmpty())
-                numbers = mutableListOf(this.gearNumbers[row+1][col], this.gearNumbers[row][col+1],
-                        this.gearNumbers[row+1][col+1], this.gearNumbers[row+1][col-1],
-                        this.gearNumbers[row][col-1])
-            else if (row == this.gearNumbers.size - 1 && (col != 0 && col != this.gearNumbers[0].size - 1))
-                numbers = mutableListOf(this.gearNumbers[row-1][col], this.gearNumbers[row][col-1],
-                        this.gearNumbers[row][col+1], this.gearNumbers[row-1][col+1],
-                        this.gearNumbers[row-1][col-1])
-        }
-
-        fun firstOrLastColumn() {
-            if (col == 0 && numbers.isEmpty())
-               numbers = mutableListOf(this.gearNumbers[row-1][col], this.gearNumbers[row+1][col], 
-                       this.gearNumbers[row][col+1], this.gearNumbers[row-1][col+1], 
-                       this.gearNumbers[row+1][col+1])
-            else if (col == this.gearNumbers[0].size - 1 && (row != 0 && row !=this.gearNumbers.size - 1))
-               numbers = mutableListOf(this.gearNumbers[row-1][col], this.gearNumbers[row+1][col], 
-                       this.gearNumbers[row][col-1], this.gearNumbers[row-1][col-1], 
-                       this.gearNumbers[row+1][col-1])
-        }
-
-        corners()
-        firstOrLastRow()
-        firstOrLastColumn()
-        if (numbers.isEmpty())
-            numbers = mutableListOf(this.gearNumbers[row-1][col], this.gearNumbers[row+1][col],
-                    this.gearNumbers[row][col-1], this.gearNumbers[row][col+1],
-                    this.gearNumbers[row-1][col+1], this.gearNumbers[row-1][col-1],
-                    this.gearNumbers[row+1][col+1], this.gearNumbers[row+1][col-1])
-
-        for (num in numbers) {
-            if (num != 0)
-                product = product.multiply(BigInteger(num.toString()))
-        }
-        return product
+        for (i in 1..< rowEnd)
+            for (j in 0..< colEnd) {
+                if (this.schematic[i][j].toString().contains("[^0-9.]".toRegex()))
+                    this.coordinateMap[i - 1][j] = mutableListOf(i, j)
+                if (this.schematic[i-1][j].toString().contains("[^0-9.]".toRegex()))
+                    this.coordinateMap[i][j] = mutableListOf(i-1, j)
+            }
     }
 
     fun findPartNumberSum():Int {
+        for (row in this.schematic.indices)
+            findNumbersForSymbols(row)
+
         var sum = 0
-        for (row in this.schematic.indices) {
-            sum += getRowSum(row)
+        for (lst in this.positionNumberMap.values) {
+            for (value in lst) {
+                sum += value
+            }
         }
         return sum
     }
 
-    private fun getRowSum(row: Int): Int {
+    fun findNumbersForSymbols(row: Int) {
         var isPartNumber = false
-        var sum = 0
-        var gearRowCol = listOf(-1, -1)
+        var coordinate = listOf(-1, -1)
         var number = ""
         for (col in this.schematic[row].indices) {
             val ch = this.schematic[row][col]
             if (ch.isDigit()) {
                 number += ch.toString()
                 if (!isPartNumber) {
-                    isPartNumber = checkForSymbols(row, col, "[^.0-9]".toRegex(), false, this.schematic)
-                    if (checkForSymbols(row, col, "[*]".toRegex(), false, this.schematic)) {
-                        this.gears[row][col] = '1'
-                        gearRowCol = listOf(row, col)
-                    }
+                    isPartNumber = this.coordinateMap[row][col] != mutableListOf(-1, -1)
+                    if (isPartNumber)
+                        coordinate = this.coordinateMap[row][col]
                 }
-                if (col == this.schematic[row].size - 1 && isPartNumber) {
-                    if (!gearRowCol.equals(listOf(-1, -1)))
-                        this.gearNumbers[gearRowCol[0]][gearRowCol[1]] = number.toInt()
-                    sum += number.toInt()
-                    gearRowCol = listOf(-1, -1)
-                }
+                if (col == this.schematic[row].size - 1 && isPartNumber)
+                    addToPositionMap(coordinate, number)
             } else if (number != "" && isPartNumber) {
-                if (!gearRowCol.equals(listOf(-1, -1)))
-                    this.gearNumbers[gearRowCol[0]][gearRowCol[1]] = number.toInt()
-                sum += number.toInt()
+                addToPositionMap(coordinate, number)
                 number = ""
                 isPartNumber = false
-                gearRowCol = listOf(-1, -1)
+                coordinate = listOf(-1, -1)
             } else {
                 number = ""
+            }
+        }
+    }
+
+    private fun addToPositionMap(coordinate: List<Int>, number: String) {
+        if (this.positionNumberMap[coordinate] == null) {
+            this.positionNumberMap = this.positionNumberMap.plus(coordinate to mutableListOf(number.toInt()))
+        } else
+            this.positionNumberMap[coordinate]!!.add(number.toInt())
+    }
+
+    fun calculateGearProduct(): BigInteger {
+        var sum = BigInteger.ZERO
+        for (key in this.positionNumberMap.keys) {
+            if (this.schematic[key[0]][key[1]] == '*' && this.positionNumberMap[key]!!.size == 2) {
+                var product = BigInteger.ONE
+                for (value in this.positionNumberMap[key]!!) {
+                    product = product.multiply(BigInteger(value.toString()))
+                }
+                sum = sum.add(product)
             }
         }
         return sum
     }
 
-    fun calculateGearProduct(): BigInteger {
-        var sum = BigInteger.ZERO
-        for (row in this.schematic.indices) {
-            for (col in this.schematic[row].indices) {
-                if (this.schematic[row][col] == '*' &&
-                    checkForSymbols(row, col, "[*]".toRegex(), true, this.gears)) {
-                    sum = sum.add(multiplyGears(row, col))
-                }
-            }
-        }
-        return sum
-    }
+
 }
 
 fun main() {
     val input = Path("src/main/resources/inputDay03.txt").readLines()
     val day3 = AOCDay03(input)
+    day3.mapSymbolCoordinates()
     println(day3.findPartNumberSum())
     println(day3.calculateGearProduct())
 }
 
-fun print2DArray(array: Array<IntArray>) {
-    for (row in array) {
-        for (col in row)
-            print(col.toString() + " ")
-        println()
-    }
-}
-
-fun print2DArray(array: Array<CharArray>) {
+fun print2DArray(array: Array<Array<MutableList<Int>>>) {
     for (row in array) {
         for (col in row)
             print(col.toString() + " ")
