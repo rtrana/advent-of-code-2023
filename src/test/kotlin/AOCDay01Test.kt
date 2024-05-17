@@ -1,7 +1,7 @@
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
 
-class AOCDay01KtTest {
+class AOCDay01Test {
 
     @Test
     fun `part1 should return sum of first-last digits`() {

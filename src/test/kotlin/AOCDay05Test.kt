@@ -3,7 +3,7 @@ import org.junit.jupiter.api.Assertions.*
 import kotlin.io.path.Path
 import kotlin.io.path.readLines
 
-class AOCDay05KtTest {
+class AOCDay05Test {
 
     @Test
     fun `should test seed range falls fully within a mapping range`() {

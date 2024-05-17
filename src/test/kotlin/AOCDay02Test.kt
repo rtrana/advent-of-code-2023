@@ -1,7 +1,7 @@
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
 
-class AOCDay02KtTest {
+class AOCDay02Test {
 
     @Test
     fun `getMaxColorsPerGame should find max colors of each game`() {

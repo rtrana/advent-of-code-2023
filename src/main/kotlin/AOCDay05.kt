@@ -135,7 +135,7 @@ fun main() {
     val input = Path("src/main/resources/inputDay05-2.txt").readLines()
     var day05 = AOCDay05(input)
     day05.parseAgroInfo()
-//    println(day05.getMinimumSeedLocation())
+    println(day05.getMinimumSeedLocation())
     println(day05.getMinimumLocationAfterConversion())
 }
 
