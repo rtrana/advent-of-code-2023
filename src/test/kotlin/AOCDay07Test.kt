@@ -4,15 +4,33 @@ import org.junit.jupiter.api.Assertions.*
 class AOCDay07Test {
 
     @Test
+    fun `should have J act as wildcard and match largest value`() {
+        var hand = CamelHand("T55J5")
+        assertEquals(mapOf(5 to 4, 10 to 1), hand.countMap)
+    }
+
+    @Test
+    fun `should have J act as wildcard and match largest value for two pair`() {
+        var hand = CamelHand("TTQQJ")
+        assertEquals(mapOf(12 to 3, 10 to 2), hand.countMap)
+    }
+
+    @Test
     fun `should get high card values for hand with no duplicates`() {
         var hand = CamelHand("T8Q31")
         assertEquals(CamelHand.CamelHandType.HIGH_CARD, hand.handType)
     }
 
     @Test
-    fun `should get pair values for hand with 1 set of duplicates`() {
+    fun `should get two pair values for hand with 1 set of duplicates `() {
+        var hand = CamelHand("59696")
+        assertEquals(CamelHand.CamelHandType.TWO_PAIR, hand.handType)
+    }
+
+    @Test
+    fun `should get three of a kind values for hand with 1 set of duplicates with J`() {
         var hand = CamelHand("596J6")
-        assertEquals(CamelHand.CamelHandType.PAIR, hand.handType)
+        assertEquals(CamelHand.CamelHandType.THREE_KIND, hand.handType)
     }
 
     @Test
@@ -59,6 +77,25 @@ class AOCDay07Test {
         var first = CamelHand("288TT")
         var second = CamelHand("55442")
         assertEquals(-1, first.compareTo(second))
+    }
+
+    @Test
+    fun `should compare four of a kind with Joker`() {
+        var first = CamelHand("JKKK2")
+        var second = CamelHand("QQQQ2")
+        assertEquals(-1, first.compareTo(second))
+    }
+
+    @Test
+    fun `should handle count map where joker is most frequently occurring`() {
+        var hand = CamelHand("5JTJ3")
+        assertEquals(mapOf(10 to 3, 5 to 1, 3 to 1), hand.countMap)
+    }
+
+    @Test
+    fun `should handle count map where joker is the only card`() {
+        var hand = CamelHand("JJJJJ")
+        assertEquals(mapOf(13 to 5), hand.countMap)
     }
 
 }

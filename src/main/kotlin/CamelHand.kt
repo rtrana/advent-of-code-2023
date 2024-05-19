@@ -5,17 +5,31 @@ class CamelHand(var handName: String): Comparable<CamelHand> {
     var letterMapper: Map<String, Int> = mapOf(
         Pair("2", 2), Pair("3", 3), Pair("4", 4), Pair("5", 5),
         Pair("6", 6), Pair("7", 7), Pair("8", 8), Pair("9", 9),
-        Pair("T", 10), Pair("J", 11), Pair("Q", 12), Pair("K", 13), Pair("A", 14) )
+        Pair("T", 10), Pair("J", 1), Pair("Q", 12), Pair("K", 13), Pair("A", 14) )
 
-    var countMap = convertHandToIntegers(this.handName).groupingBy { it }.eachCount()
-            .toList().sortedWith(compareBy({ it.second }, { it.first })).asReversed().toMap()
+    var countMap = convertHandToMappedIntegers(this.handName)
 
     var handType: CamelHandType? = CamelHandType.find(this.countMap.values.toList())
 
-    fun convertHandToIntegers(hand: String): List<Int> {
-        return hand.toList()
+    fun convertHandToMappedIntegers(hand: String): Map<Int, Int> {
+        var originalHandMap = hand.toList()
             .map { it ->  it.toString()}
             .map { it -> letterMapper.getOrDefault(it, 0) }
+            .groupingBy { it }.eachCount()
+            .toList().sortedWith(compareBy({ it.second }, { it.first })).asReversed().toMap().toMutableMap()
+
+        if (originalHandMap.contains(1)) {
+            var jokerCount = originalHandMap.getOrDefault(1, 0)
+            originalHandMap.remove(1)
+            if (jokerCount == 5)
+                originalHandMap[13] = 5
+            else {
+                var keys = originalHandMap.keys.toList()
+                var maxValue: Int = keys[0]
+                originalHandMap[maxValue] = originalHandMap.getOrDefault(maxValue, 0) + jokerCount
+            }
+        }
+        return originalHandMap
     }
 
     override fun equals(other: Any?): Boolean {
