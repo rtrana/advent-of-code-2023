@@ -1,15 +1,16 @@
 import kotlin.io.path.Path
 import kotlin.io.path.readLines
-import kotlin.math.abs
 
 class AOCDay09 {
 
-    fun getExtrapolatedValue(nums: List<Long>): Long {
+    fun getExtrapolatedValues(nums: List<Long>): List<Long> {
         var endsOfLists: MutableList<Long> = mutableListOf()
+        var frontsOfLists: MutableList<Long> = mutableListOf()
         var currentNumList: MutableList<Long> = nums.toMutableList()
         var count = Int.MAX_VALUE
         while (count != 0) {
             var tempList: MutableList<Long> = mutableListOf()
+            frontsOfLists.add(currentNumList[0])
             endsOfLists.add(currentNumList[currentNumList.lastIndex])
             for (i in 0..< currentNumList.size - 1) {
                 tempList.add(currentNumList[i + 1] - currentNumList[i])
@@ -20,15 +21,23 @@ class AOCDay09 {
                 currentNumList = tempList
         }
 
-        return endsOfLists.sum()
+        var start: Long = 0
+        var reversedFront = frontsOfLists.reversed()
+        for (i in reversedFront.indices) {
+            start = reversedFront[i] - start
+        }
+        return listOf(endsOfLists.sum(), start )
     }
 
-    fun addExtrapolatedValues(report: List<List<Long>>): Long {
+    fun calculateExtrapolatedValues(report: List<List<Long>>): List<Long> {
         var total: Long = 0
+        var totalFront: Long = 0
         for (sequence in report) {
-            total += getExtrapolatedValue(sequence)
+            var extrapolations = getExtrapolatedValues(sequence)
+            total += extrapolations[0]
+            totalFront += extrapolations[1]
         }
-        return total
+        return listOf(total, totalFront)
     }
 }
 
@@ -43,5 +52,5 @@ fun parseInput(input: List<String>): List<List<Long>> {
 fun main() {
     val input = Path("src/main/resources/inputDay09-2.txt").readLines()
     val report = parseInput(input)
-    println(AOCDay09().addExtrapolatedValues(report))
+    println(AOCDay09().calculateExtrapolatedValues(report))
 }
